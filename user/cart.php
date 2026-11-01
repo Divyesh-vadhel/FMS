@@ -13,9 +13,9 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   
-  <!-- Shared Style System -->
-  <link rel="stylesheet" href="../assets/css/styles.css">
-  <link rel="stylesheet" href="../assets/css/admin.css">
+  <!-- Shared Style System with Cache Buster -->
+  <link rel="stylesheet" href="../assets/css/styles.css?v=<?= time() ?>">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=<?= time() ?>">
 </head>
 <body data-theme="light">
 
@@ -295,8 +295,8 @@
     </div>
   </div>
 
-  <!-- User Controller Script -->
-  <script src="../assets/js/user.js"></script>
+  <!-- User Controller Script with Cache Buster -->
+  <script src="../assets/js/user.js?v=<?= time() ?>"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       renderFullCartPage();

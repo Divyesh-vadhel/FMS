@@ -138,11 +138,22 @@ function highlightActiveNav() {
 }
 
 function initCartFromStorage() {
+  const savedUser = localStorage.getItem('fms_user');
+  // REQUIRE LOGIN: If not signed in, ensure cart is empty and removed
+  if (!savedUser) {
+    state.cart = {};
+    localStorage.removeItem('fms_cart');
+    updateCartUI();
+    return;
+  }
+
   const savedCart = localStorage.getItem('fms_cart');
   if (savedCart) {
     try {
       state.cart = JSON.parse(savedCart);
-    } catch (e) {}
+    } catch (e) {
+      state.cart = {};
+    }
   }
   updateCartUI();
   if (document.getElementById('full-cart-content')) {
@@ -458,8 +469,11 @@ function renderMenuItems(menuList) {
     return;
   }
 
+  const savedUser = localStorage.getItem('fms_user');
+
   body.innerHTML = menuList.map(item => {
-    const qty = state.cart[item.menu_id] ? state.cart[item.menu_id].qty : 0;
+    // REQUIRE LOGIN: If user is not logged in, always show ADD button (qty = 0)
+    const qty = (savedUser && state.cart[item.menu_id]) ? state.cart[item.menu_id].qty : 0;
     const isVeg = item.is_veg == 1;
     const isBestseller = parseFloat(item.price) >= 200 || 
       (item.name && (item.name.toLowerCase().includes('special') || item.name.toLowerCase().includes('cake') || item.name.toLowerCase().includes('biryani') || item.name.toLowerCase().includes('waffle')));
@@ -563,6 +577,13 @@ function clearModalSearch() {
 function updateModalCartBar() {
   const bar = document.getElementById('menu-modal-cart-bar');
   if (!bar) return;
+
+  const savedUser = localStorage.getItem('fms_user');
+  // REQUIRE LOGIN: If not signed in, strictly hide floating cart bar!
+  if (!savedUser) {
+    bar.style.display = 'none';
+    return;
+  }
 
   let totalQty = 0;
   let totalPrice = 0;
@@ -808,6 +829,39 @@ function syncCartToBackend() {
 }
 
 function updateCartUI() {
+  const savedUser = localStorage.getItem('fms_user');
+  // REQUIRE LOGIN: If not signed in, strictly keep cart empty and hide badges/bars
+  if (!savedUser) {
+    state.cart = {};
+    document.querySelectorAll('#cart-badge').forEach(badge => {
+      badge.innerText = '0';
+      badge.style.display = 'none';
+    });
+    const modalCartBar = document.getElementById('menu-modal-cart-bar');
+    if (modalCartBar) modalCartBar.style.display = 'none';
+
+    if (document.getElementById('full-cart-content')) {
+      renderFullCartPage();
+    }
+
+    const container = document.getElementById('cart-items-list');
+    if (container) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 3rem 1.25rem;">
+          <i data-lucide="lock" style="width: 44px; height: 44px; color: var(--primary); margin-bottom: 1rem; opacity: 0.85;"></i>
+          <h4 style="font-weight: 700; margin-bottom: 6px;">Sign In to View Basket</h4>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">Please log in to your BITEBUDDY account to view items and order.</p>
+          <a href="login.php" class="filter-chip active" style="display: inline-flex; text-decoration: none; padding: 8px 18px;">
+            <i data-lucide="log-in" style="width: 14px; height: 14px;"></i> Sign In Now
+          </a>
+        </div>
+      `;
+      initLucide();
+    }
+    updateBillTotals(0);
+    return;
+  }
+
   const keys = Object.keys(state.cart);
   const totalCount = keys.reduce((acc, k) => acc + state.cart[k].qty, 0);
 
@@ -925,6 +979,13 @@ function applyCoupon() {
 }
 
 function toggleCartDrawer() {
+  const savedUser = localStorage.getItem('fms_user');
+  if (!savedUser) {
+    sessionStorage.setItem('fms_redirect_url', window.location.href);
+    window.location.href = 'login.php';
+    return;
+  }
+
   const drawer = document.getElementById('cart-drawer');
   const overlay = document.getElementById('cart-overlay');
   if (!drawer) return;
@@ -1439,6 +1500,12 @@ function checkAuthState() {
       if (authProtectedNav) authProtectedNav.style.display = 'none';
     }
   } else {
+    // When user is not logged in: clear cart state & hide modal cart bar
+    state.cart = {};
+    localStorage.removeItem('fms_cart');
+    const modalCartBar = document.getElementById('menu-modal-cart-bar');
+    if (modalCartBar) modalCartBar.style.display = 'none';
+
     if (guestBox) guestBox.style.display = 'flex';
     if (userBox) userBox.style.display = 'none';
     if (authProtectedNav) authProtectedNav.style.display = 'none';
@@ -1538,12 +1605,21 @@ function handleRegisterSubmit(e) {
 function handleLogout() {
   if (confirm('Are you sure you want to log out?')) {
     localStorage.removeItem('fms_user');
+    localStorage.removeItem('fms_cart');
+    sessionStorage.removeItem('fms_pending_dish');
+    sessionStorage.removeItem('fms_pending_restaurant');
+    state.cart = {};
+    updateCartUI();
+    const modalCartBar = document.getElementById('menu-modal-cart-bar');
+    if (modalCartBar) modalCartBar.style.display = 'none';
     const menu = document.getElementById('profile-dropdown-menu');
     if (menu) menu.classList.remove('active');
     checkAuthState();
     alert('You have logged out successfully.');
     if (window.location.pathname.includes('cart.php') || window.location.pathname.includes('orders.php')) {
       window.location.href = 'index.php';
+    } else {
+      window.location.reload();
     }
   }
 }
