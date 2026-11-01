@@ -64,14 +64,14 @@
 
         <!-- Login / Register Buttons (Guest State: Only shown without login) -->
         <div id="auth-guest-links" style="display: flex; align-items: center; gap: 8px;">
-          <button class="nav-link-item nav-btn-outline" onclick="openAuthModal('login')" title="Customer Login">
+          <a href="login.php" class="nav-link-item nav-btn-outline" title="Customer Login">
             <i data-lucide="log-in"></i>
             <span>Login</span>
-          </button>
-          <button class="nav-link-item nav-btn-primary" onclick="openAuthModal('register')" title="Create Account">
+          </a>
+          <a href="login.php?tab=register" class="nav-link-item nav-btn-primary" title="Create Account">
             <i data-lucide="user-plus"></i>
             <span>Register</span>
-          </button>
+          </a>
         </div>
 
         <!-- Logged In User State: Profile Icon & Menu -->

@@ -47,13 +47,25 @@ if (empty($_SESSION['admin_logged_in'])) {
           <i data-lucide="shopping-cart"></i>
           <span>Orders</span>
         </a>
-        <a href="restaurants.php" class="nav-link-item">
+        <a href="products.php" class="nav-link-item">
           <i data-lucide="utensils"></i>
-          <span>Restaurants</span>
+          <span>Products</span>
         </a>
-        <a href="riders.php" class="nav-link-item">
+        <a href="users.php" class="nav-link-item">
+          <i data-lucide="users"></i>
+          <span>Users</span>
+        </a>
+        <a href="drivers.php" class="nav-link-item">
           <i data-lucide="bike"></i>
-          <span>Fleet</span>
+          <span>Drivers</span>
+        </a>
+        <a href="carts.php" class="nav-link-item">
+          <i data-lucide="shopping-bag"></i>
+          <span>Carts</span>
+        </a>
+        <a href="restaurants.php" class="nav-link-item">
+          <i data-lucide="store"></i>
+          <span>Outlets</span>
         </a>
         <a href="../user/index.php" class="nav-link-item nav-btn-outline" title="Open Customer Storefront">
           <i data-lucide="external-link"></i>
@@ -97,16 +109,25 @@ if (empty($_SESSION['admin_logged_in'])) {
     <!-- Admin Subnavigation Bar -->
     <div class="admin-subnav">
       <a href="index.php" class="admin-nav-item active">
-        <i data-lucide="gauge" style="width: 16px;"></i> Dashboard Overview
+        <i data-lucide="gauge" style="width: 16px;"></i> Dashboard
       </a>
       <a href="orders.php" class="admin-nav-item">
-        <i data-lucide="shopping-cart" style="width: 16px;"></i> Orders Management
+        <i data-lucide="shopping-cart" style="width: 16px;"></i> Orders
+      </a>
+      <a href="products.php" class="admin-nav-item">
+        <i data-lucide="utensils" style="width: 16px;"></i> Products
+      </a>
+      <a href="users.php" class="admin-nav-item">
+        <i data-lucide="users" style="width: 16px;"></i> Users
+      </a>
+      <a href="drivers.php" class="admin-nav-item">
+        <i data-lucide="bike" style="width: 16px;"></i> Drivers
+      </a>
+      <a href="carts.php" class="admin-nav-item">
+        <i data-lucide="shopping-bag" style="width: 16px;"></i> Carts
       </a>
       <a href="restaurants.php" class="admin-nav-item">
-        <i data-lucide="utensils" style="width: 16px;"></i> Restaurants & Menus
-      </a>
-      <a href="riders.php" class="admin-nav-item">
-        <i data-lucide="bike" style="width: 16px;"></i> Delivery Fleet
+        <i data-lucide="store" style="width: 16px;"></i> Outlets
       </a>
     </div>
 

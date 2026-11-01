@@ -184,6 +184,7 @@ async function loadData() {
 
   state.filteredRestaurants = [...state.restaurants];
   renderRestaurants();
+  checkAutoAddPendingDish();
 
   // Load Saved Addresses
   try {
@@ -461,9 +462,34 @@ function closeMenuModal() {
 }
 
 // =====================================================================
-// CART MANAGEMENT
+// CART MANAGEMENT & AUTHENTICATION REDIRECT
 // =====================================================================
+function checkAutoAddPendingDish() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const autoAddId = urlParams.get('auto_add') || sessionStorage.getItem('fms_pending_dish');
+  const savedUser = localStorage.getItem('fms_user');
+
+  if (autoAddId && savedUser) {
+    sessionStorage.removeItem('fms_pending_dish');
+    sessionStorage.removeItem('fms_redirect_url');
+    if (urlParams.has('auto_add')) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    // Add dish
+    addToCart(autoAddId);
+  }
+}
+
 function addToCart(menuId) {
+  // REQUIRE LOGIN: If not signed in or registered, redirect directly to login page!
+  const savedUser = localStorage.getItem('fms_user');
+  if (!savedUser) {
+    sessionStorage.setItem('fms_pending_dish', menuId);
+    sessionStorage.setItem('fms_redirect_url', window.location.href);
+    window.location.href = 'login.php';
+    return;
+  }
+
   let dish = null;
   for (const r of state.restaurants) {
     const found = (r.menu || []).find(m => m.menu_id == menuId);
@@ -486,12 +512,22 @@ function addToCart(menuId) {
 
   localStorage.setItem('fms_cart', JSON.stringify(state.cart));
   updateCartUI();
+  syncCartToBackend();
   if (state.selectedRestaurant) {
     renderMenuItems(state.selectedRestaurant.menu || []);
   }
 }
 
 function updateCartQty(menuId, delta) {
+  // If attempting to increase qty without login, redirect to login page
+  const savedUser = localStorage.getItem('fms_user');
+  if (!savedUser && delta > 0) {
+    sessionStorage.setItem('fms_pending_dish', menuId);
+    sessionStorage.setItem('fms_redirect_url', window.location.href);
+    window.location.href = 'login.php';
+    return;
+  }
+
   if (!state.cart[menuId]) return;
 
   state.cart[menuId].qty += delta;
@@ -501,6 +537,7 @@ function updateCartQty(menuId, delta) {
 
   localStorage.setItem('fms_cart', JSON.stringify(state.cart));
   updateCartUI();
+  syncCartToBackend();
   if (state.selectedRestaurant) {
     renderMenuItems(state.selectedRestaurant.menu || []);
   }
@@ -510,6 +547,7 @@ function removeFromCart(menuId) {
   delete state.cart[menuId];
   localStorage.setItem('fms_cart', JSON.stringify(state.cart));
   updateCartUI();
+  syncCartToBackend();
   if (state.selectedRestaurant) {
     renderMenuItems(state.selectedRestaurant.menu || []);
   }
@@ -520,7 +558,32 @@ function clearFullCart() {
     state.cart = {};
     localStorage.removeItem('fms_cart');
     updateCartUI();
+    syncCartToBackend();
   }
+}
+
+function syncCartToBackend() {
+  const savedUser = localStorage.getItem('fms_user');
+  if (!savedUser) return;
+  try {
+    const user = JSON.parse(savedUser);
+    const userId = user.user_id || 1;
+    const items = Object.keys(state.cart).map(mId => ({
+      menu_id: mId,
+      quantity: state.cart[mId].qty
+    }));
+    const rId = Object.values(state.cart)[0]?.dish?.restaurant_id || 1;
+
+    fetch(`${API_BASE}?action=sync_cart`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: userId,
+        restaurant_id: rId,
+        items: items
+      })
+    }).catch(() => {});
+  } catch (e) {}
 }
 
 function updateCartUI() {
