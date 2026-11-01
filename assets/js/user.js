@@ -15,8 +15,20 @@ const state = {
   activeFilter: 'all',
   addresses: [],
   selectedAddressId: 1,
-  activeOrder: null
+  activeOrder: null,
+  activeModalFilter: 'all',
+  modalSearchQuery: ''
 };
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 // Fallback Mock Data in case server is viewed without MySQL running
 const fallbackRestaurants = [
@@ -392,24 +404,41 @@ function filterByCategory(category) {
 }
 
 // =====================================================================
-// RESTAURANT MENU MODAL
+// PREMIER RESTAURANT MENU MODAL (Swiggy / Zomato Format)
 // =====================================================================
 function openRestaurantMenu(restaurantId) {
-  const r = state.restaurants.find(item => item.restaurant_id == restaurantId);
+  const r = state.restaurants.find(item => String(item.restaurant_id) === String(restaurantId));
   if (!r) return;
 
   state.selectedRestaurant = r;
+  state.activeModalFilter = 'all';
+  state.modalSearchQuery = '';
+
   const modal = document.getElementById('menu-modal');
   const title = document.getElementById('menu-modal-title');
   const cuisine = document.getElementById('menu-modal-cuisine');
+  const rating = document.getElementById('menu-modal-rating');
+  const deliveryTime = document.getElementById('menu-modal-delivery-time');
   const addr = document.getElementById('menu-modal-address');
+  const searchInput = document.getElementById('menu-search-input');
+  const searchClear = document.getElementById('modal-search-clear');
 
-  title.innerText = r.name;
-  cuisine.innerText = r.cuisine_type || 'Multi-Cuisine';
-  addr.innerText = `${r.address} • ★ ${r.rating} (500+ reviews)`;
+  if (title) title.innerText = r.name;
+  if (cuisine) cuisine.innerText = r.cuisine_type || 'Multi-Cuisine';
+  if (rating) rating.innerText = r.rating || '4.8';
+  if (deliveryTime) deliveryTime.innerText = r.delivery_time || '25-30 mins';
+  if (addr) addr.innerText = r.address || 'Central Galleria';
+  if (searchInput) searchInput.value = '';
+  if (searchClear) searchClear.style.display = 'none';
+
+  // Reset modal filter buttons
+  document.querySelectorAll('.modal-filter-btn').forEach(b => b.classList.remove('active'));
+  const allBtn = document.getElementById('modal-filter-all');
+  if (allBtn) allBtn.classList.add('active');
 
   renderMenuItems(r.menu || []);
-  modal.classList.add('active');
+  updateModalCartBar();
+  if (modal) modal.classList.add('active');
   initLucide();
 }
 
@@ -417,35 +446,59 @@ function renderMenuItems(menuList) {
   const body = document.getElementById('menu-items-body');
   if (!body) return;
 
-  if (menuList.length === 0) {
-    body.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 2rem;">No menu items listed yet.</p>`;
+  if (!menuList || menuList.length === 0) {
+    body.innerHTML = `
+      <div class="menu-empty-state">
+        <i data-lucide="utensils" style="width: 40px; height: 40px; opacity: 0.3; margin-bottom: 8px;"></i>
+        <p style="font-weight: 700; font-size: 1rem; color: var(--text); margin-bottom: 4px;">No dishes found</p>
+        <span style="font-size: 0.82rem; color: var(--text-muted);">Try adjusting your search or filters to discover more items</span>
+      </div>`;
+    initLucide();
+    updateModalCartBar();
     return;
   }
 
   body.innerHTML = menuList.map(item => {
     const qty = state.cart[item.menu_id] ? state.cart[item.menu_id].qty : 0;
     const isVeg = item.is_veg == 1;
+    const isBestseller = parseFloat(item.price) >= 200 || 
+      (item.name && (item.name.toLowerCase().includes('special') || item.name.toLowerCase().includes('cake') || item.name.toLowerCase().includes('biryani') || item.name.toLowerCase().includes('waffle')));
+
     return `
-      <div class="dish-item-card">
+      <div class="dish-item-card" id="dish-card-${item.menu_id}">
         <div class="dish-info">
-          <div class="dish-type-badge ${isVeg ? 'veg' : 'nonveg'}" title="${isVeg ? 'Vegetarian' : 'Non-Vegetarian'}"></div>
-          <div class="dish-name">${item.name}</div>
+          <div class="dish-meta-badges">
+            <span class="dish-type-badge ${isVeg ? 'veg' : 'nonveg'}" title="${isVeg ? 'Vegetarian' : 'Non-Vegetarian'}">
+              <span class="badge-dot"></span>
+            </span>
+            ${isBestseller ? `
+              <span class="dish-bestseller-tag">
+                <i data-lucide="star" style="width: 10px; height: 10px; fill: currentColor;"></i>
+                <span>BESTSELLER</span>
+              </span>
+            ` : ''}
+          </div>
+
+          <h3 class="dish-name">${escapeHtml(item.name)}</h3>
           <div class="dish-price">₹${parseFloat(item.price).toFixed(2)}</div>
-          <div class="dish-desc">${item.description || 'Delicious freshly prepared recipe with authentic spices and chef special ingredients.'}</div>
+          <p class="dish-desc">${escapeHtml(item.description || 'Delicious freshly prepared recipe with authentic spices and chef special ingredients.')}</p>
         </div>
+
         <div class="dish-action-col">
           <div class="dish-thumb">
-            <img src="${item.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'}" alt="${item.name}" loading="lazy">
+            <img src="${item.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'}" alt="${escapeHtml(item.name)}" loading="lazy">
           </div>
+
           ${qty === 0 ? `
-            <button class="add-btn" onclick="addToCart('${item.menu_id}')">
-              ADD <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+            <button class="add-btn" onclick="addToCart('${item.menu_id}')" title="Add ${escapeHtml(item.name)} to basket">
+              <span>ADD</span>
+              <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
             </button>
           ` : `
             <div class="qty-counter">
-              <button class="qty-btn" onclick="updateCartQty('${item.menu_id}', -1)">−</button>
-              <span>${qty}</span>
-              <button class="qty-btn" onclick="updateCartQty('${item.menu_id}', 1)">+</button>
+              <button class="qty-btn" onclick="updateCartQty('${item.menu_id}', -1)" title="Decrease quantity">−</button>
+              <span class="qty-num">${qty}</span>
+              <button class="qty-btn" onclick="updateCartQty('${item.menu_id}', 1)" title="Increase quantity">+</button>
             </div>
           `}
         </div>
@@ -453,7 +506,82 @@ function renderMenuItems(menuList) {
     `;
   }).join('');
 
+  updateModalCartBar();
   initLucide();
+}
+
+function filterModalDishes() {
+  if (!state.selectedRestaurant || !state.selectedRestaurant.menu) return;
+
+  const searchInput = document.getElementById('menu-search-input');
+  const searchClear = document.getElementById('modal-search-clear');
+  const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+  if (searchClear) {
+    searchClear.style.display = query.length > 0 ? 'flex' : 'none';
+  }
+
+  let filtered = [...state.selectedRestaurant.menu];
+
+  // In-modal search query
+  if (query) {
+    filtered = filtered.filter(item => {
+      const nameMatch = (item.name || '').toLowerCase().includes(query);
+      const descMatch = (item.description || '').toLowerCase().includes(query);
+      const catMatch = (item.category || '').toLowerCase().includes(query);
+      return nameMatch || descMatch || catMatch;
+    });
+  }
+
+  // Active filter tab
+  if (state.activeModalFilter === 'veg') {
+    filtered = filtered.filter(item => item.is_veg == 1);
+  } else if (state.activeModalFilter === 'bestseller') {
+    filtered = filtered.filter(item => {
+      return parseFloat(item.price) >= 200 || 
+        (item.name && (item.name.toLowerCase().includes('special') || item.name.toLowerCase().includes('cake') || item.name.toLowerCase().includes('biryani') || item.name.toLowerCase().includes('waffle')));
+    });
+  }
+
+  renderMenuItems(filtered);
+}
+
+function setModalFilter(filter) {
+  state.activeModalFilter = filter;
+  document.querySelectorAll('.modal-filter-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(`modal-filter-${filter}`);
+  if (btn) btn.classList.add('active');
+  filterModalDishes();
+}
+
+function clearModalSearch() {
+  const searchInput = document.getElementById('menu-search-input');
+  if (searchInput) searchInput.value = '';
+  filterModalDishes();
+}
+
+function updateModalCartBar() {
+  const bar = document.getElementById('menu-modal-cart-bar');
+  if (!bar) return;
+
+  let totalQty = 0;
+  let totalPrice = 0;
+
+  for (const key in state.cart) {
+    const item = state.cart[key];
+    totalQty += item.qty;
+    totalPrice += item.qty * parseFloat(item.dish.price);
+  }
+
+  if (totalQty > 0) {
+    bar.style.display = 'flex';
+    const countEl = document.getElementById('modal-cart-count');
+    const totalEl = document.getElementById('modal-cart-total');
+    if (countEl) countEl.innerText = `${totalQty} ${totalQty === 1 ? 'Item' : 'Items'}`;
+    if (totalEl) totalEl.innerText = `₹${totalPrice.toFixed(2)}`;
+  } else {
+    bar.style.display = 'none';
+  }
 }
 
 function closeMenuModal() {
@@ -466,17 +594,65 @@ function closeMenuModal() {
 // =====================================================================
 function checkAutoAddPendingDish() {
   const urlParams = new URLSearchParams(window.location.search);
-  const autoAddId = urlParams.get('auto_add') || sessionStorage.getItem('fms_pending_dish');
+  const autoAddId = urlParams.get('auto_add') || sessionStorage.getItem('fms_pending_dish') || localStorage.getItem('fms_pending_dish');
   const savedUser = localStorage.getItem('fms_user');
 
-  if (autoAddId && savedUser) {
-    sessionStorage.removeItem('fms_pending_dish');
-    sessionStorage.removeItem('fms_redirect_url');
-    if (urlParams.has('auto_add')) {
-      window.history.replaceState({}, document.title, window.location.pathname);
+  if (!autoAddId || !savedUser) return;
+  if (!state.restaurants || state.restaurants.length === 0) {
+    // Wait until restaurants are loaded
+    return;
+  }
+
+  // Find dish and restaurant
+  let targetDish = null;
+  let targetRestaurant = null;
+  for (const r of state.restaurants) {
+    const found = (r.menu || []).find(m => String(m.menu_id) === String(autoAddId));
+    if (found) {
+      targetDish = found;
+      targetRestaurant = r;
+      break;
     }
-    // Add dish
-    addToCart(autoAddId);
+  }
+
+  // Clear pending flags
+  sessionStorage.removeItem('fms_pending_dish');
+  localStorage.removeItem('fms_pending_dish');
+  sessionStorage.removeItem('fms_pending_restaurant');
+  sessionStorage.removeItem('fms_redirect_url');
+  if (urlParams.has('auto_add')) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
+  if (targetDish && targetRestaurant) {
+    // Add dish to cart
+    if (!state.cart[autoAddId]) {
+      state.cart[autoAddId] = {
+        dish: { ...targetDish, restaurant_id: targetRestaurant.restaurant_id, restaurant_name: targetRestaurant.name },
+        qty: 1
+      };
+    } else {
+      state.cart[autoAddId].qty += 1;
+    }
+
+    localStorage.setItem('fms_cart', JSON.stringify(state.cart));
+    updateCartUI();
+    syncCartToBackend();
+
+    // Automatically open restaurant menu modal
+    openRestaurantMenu(targetRestaurant.restaurant_id);
+
+    // Scroll to the dish and flash with green highlight pulse
+    setTimeout(() => {
+      const dishEl = document.getElementById(`dish-card-${autoAddId}`);
+      if (dishEl) {
+        dishEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        dishEl.classList.add('dish-highlight-pulse');
+        setTimeout(() => dishEl.classList.remove('dish-highlight-pulse'), 2500);
+      }
+    }, 350);
+
+    showToast(`🎉 "${targetDish.name}" added to your basket!`);
   }
 }
 
@@ -485,14 +661,18 @@ function addToCart(menuId) {
   const savedUser = localStorage.getItem('fms_user');
   if (!savedUser) {
     sessionStorage.setItem('fms_pending_dish', menuId);
+    localStorage.setItem('fms_pending_dish', menuId);
+    if (state.selectedRestaurant) {
+      sessionStorage.setItem('fms_pending_restaurant', state.selectedRestaurant.restaurant_id);
+    }
     sessionStorage.setItem('fms_redirect_url', window.location.href);
-    window.location.href = 'login.php';
+    window.location.href = `login.php?add_dish=${encodeURIComponent(menuId)}`;
     return;
   }
 
   let dish = null;
   for (const r of state.restaurants) {
-    const found = (r.menu || []).find(m => m.menu_id == menuId);
+    const found = (r.menu || []).find(m => String(m.menu_id) === String(menuId));
     if (found) {
       dish = { ...found, restaurant_id: r.restaurant_id, restaurant_name: r.name };
       break;
@@ -513,9 +693,13 @@ function addToCart(menuId) {
   localStorage.setItem('fms_cart', JSON.stringify(state.cart));
   updateCartUI();
   syncCartToBackend();
+
   if (state.selectedRestaurant) {
-    renderMenuItems(state.selectedRestaurant.menu || []);
+    filterModalDishes();
   }
+
+  updateModalCartBar();
+  showToast(`🎉 "${dish.name}" added to basket!`);
 }
 
 function updateCartQty(menuId, delta) {
@@ -523,8 +707,12 @@ function updateCartQty(menuId, delta) {
   const savedUser = localStorage.getItem('fms_user');
   if (!savedUser && delta > 0) {
     sessionStorage.setItem('fms_pending_dish', menuId);
+    localStorage.setItem('fms_pending_dish', menuId);
+    if (state.selectedRestaurant) {
+      sessionStorage.setItem('fms_pending_restaurant', state.selectedRestaurant.restaurant_id);
+    }
     sessionStorage.setItem('fms_redirect_url', window.location.href);
-    window.location.href = 'login.php';
+    window.location.href = `login.php?add_dish=${encodeURIComponent(menuId)}`;
     return;
   }
 
@@ -538,9 +726,12 @@ function updateCartQty(menuId, delta) {
   localStorage.setItem('fms_cart', JSON.stringify(state.cart));
   updateCartUI();
   syncCartToBackend();
+
   if (state.selectedRestaurant) {
-    renderMenuItems(state.selectedRestaurant.menu || []);
+    filterModalDishes();
   }
+
+  updateModalCartBar();
 }
 
 function removeFromCart(menuId) {
@@ -549,8 +740,38 @@ function removeFromCart(menuId) {
   updateCartUI();
   syncCartToBackend();
   if (state.selectedRestaurant) {
-    renderMenuItems(state.selectedRestaurant.menu || []);
+    filterModalDishes();
   }
+  updateModalCartBar();
+}
+
+function showToast(message, type = 'success') {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast-message ${type}`;
+  toast.innerHTML = `
+    <div class="toast-content">
+      <i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" style="width: 18px; height: 18px; flex-shrink: 0; color: #16a34a;"></i>
+      <span>${message}</span>
+    </div>
+  `;
+
+  container.appendChild(toast);
+  initLucide();
+
+  requestAnimationFrame(() => toast.classList.add('show'));
+
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 400);
+  }, 3500);
 }
 
 function clearFullCart() {

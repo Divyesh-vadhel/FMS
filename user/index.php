@@ -13,8 +13,8 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   
-  <!-- Shared Style System -->
-  <link rel="stylesheet" href="../assets/css/styles.css">
+  <!-- Shared Style System with Cache Buster -->
+  <link rel="stylesheet" href="../assets/css/styles.css?v=<?= time() ?>">
 </head>
 <body data-theme="light">
 
@@ -293,19 +293,87 @@
   </main>
 
   <!-- =====================================================================
-       RESTAURANT MENU MODAL
+       PREMIER RESTAURANT MENU MODAL (Swiggy / Zomato Best Format)
        ===================================================================== -->
   <div class="modal-overlay" id="menu-modal" onclick="if(event.target === this) closeMenuModal()">
     <div class="menu-modal-dialog">
-      <div class="modal-header-hero">
-        <button class="close-modal-btn" onclick="closeMenuModal()"><i data-lucide="x"></i></button>
-        <h2 id="menu-modal-title" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 4px;">Restaurant Name</h2>
-        <div id="menu-modal-cuisine" style="color: var(--text-muted); font-size: 0.88rem;">Cuisine info</div>
-        <div id="menu-modal-address" style="color: var(--text-light); font-size: 0.8rem; margin-top: 4px;">Address details</div>
+      <!-- Modal Header Hero with Rich Badges & Delivery Info -->
+      <div class="menu-modal-hero">
+        <button class="close-modal-btn" onclick="closeMenuModal()" aria-label="Close restaurant menu">
+          <i data-lucide="x"></i>
+        </button>
+
+        <div class="menu-modal-hero-content">
+          <div class="menu-modal-title-row">
+            <h2 id="menu-modal-title">Restaurant Name</h2>
+            <span class="verified-badge" title="FSSAI Verified Food Partner">
+              <i data-lucide="badge-check" style="width: 14px; height: 14px;"></i> Verified
+            </span>
+          </div>
+
+          <div class="menu-modal-cuisine" id="menu-modal-cuisine">Cuisine info</div>
+
+          <div class="menu-modal-meta">
+            <span class="meta-pill rating-pill" id="menu-modal-rating-pill">
+              <i data-lucide="star" style="width: 13px; height: 13px; fill: currentColor;"></i>
+              <span id="menu-modal-rating">4.8</span>
+              <span class="reviews-count">(500+ ratings)</span>
+            </span>
+            <span class="meta-pill">
+              <i data-lucide="clock" style="width: 13px; height: 13px;"></i>
+              <span id="menu-modal-delivery-time">25-30 mins</span>
+            </span>
+            <span class="meta-pill">
+              <i data-lucide="map-pin" style="width: 13px; height: 13px;"></i>
+              <span id="menu-modal-address">Location</span>
+            </span>
+            <span class="meta-pill offer-pill">
+              <i data-lucide="tag" style="width: 13px; height: 13px;"></i> Free Delivery above ₹199
+            </span>
+          </div>
+        </div>
+
+        <!-- In-Modal Quick Search & Veg/Non-Veg Filter Toolbar -->
+        <div class="menu-modal-toolbar">
+          <div class="modal-search-box">
+            <i data-lucide="search" style="width: 15px; height: 15px; color: var(--text-muted);"></i>
+            <input type="text" id="menu-search-input" placeholder="Search dishes in this menu..." oninput="filterModalDishes()" autocomplete="off">
+            <button type="button" class="modal-search-clear" id="modal-search-clear" onclick="clearModalSearch()" style="display: none;" title="Clear search">
+              <i data-lucide="x" style="width: 12px; height: 12px;"></i>
+            </button>
+          </div>
+
+          <div class="modal-filter-toggles">
+            <button type="button" class="modal-filter-btn active" id="modal-filter-all" onclick="setModalFilter('all')">All</button>
+            <button type="button" class="modal-filter-btn" id="modal-filter-veg" onclick="setModalFilter('veg')">
+              <span class="veg-dot"></span> Pure Veg
+            </button>
+            <button type="button" class="modal-filter-btn" id="modal-filter-bestseller" onclick="setModalFilter('bestseller')">
+              ⭐ Bestsellers
+            </button>
+          </div>
+        </div>
       </div>
 
+      <!-- Menu Items List Body -->
       <div class="menu-list-body" id="menu-items-body">
-        <!-- Rendered dynamically -->
+        <!-- Rendered dynamically via user.js -->
+      </div>
+
+      <!-- Floating Bottom Mini-Cart inside Modal -->
+      <div class="menu-modal-cart-bar" id="menu-modal-cart-bar" style="display: none;">
+        <div class="modal-cart-info">
+          <div class="modal-cart-count-row">
+            <span class="modal-cart-count" id="modal-cart-count">1 Item</span>
+            <span class="modal-cart-divider">•</span>
+            <span class="modal-cart-total" id="modal-cart-total">₹0.00</span>
+          </div>
+          <span class="modal-cart-sub">Extra charges & taxes may apply at checkout</span>
+        </div>
+        <button class="modal-cart-checkout-btn" onclick="closeMenuModal(); toggleCartDrawer();">
+          <span>View Cart & Checkout</span>
+          <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
+        </button>
       </div>
     </div>
   </div>
@@ -556,8 +624,11 @@
     </div>
   </div>
 
-  <!-- User Controller Script -->
-  <script src="../assets/js/user.js"></script>
+  <!-- Global Toast Notifications Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- User Controller Script with Cache Buster -->
+  <script src="../assets/js/user.js?v=<?= time() ?>"></script>
 </body>
 </html>
 

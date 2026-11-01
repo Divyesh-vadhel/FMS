@@ -5,9 +5,10 @@
  */
 session_start();
 
-// If already signed in in PHP session, redirect to storefront
+// If already signed in in PHP session, preserve add_dish and redirect to storefront
 if (!empty($_SESSION['user_logged_in'])) {
-    header("Location: index.php");
+    $add_dish = !empty($_GET['add_dish']) ? '?auto_add=' . urlencode($_GET['add_dish']) : '';
+    header("Location: index.php" . $add_dish);
     exit();
 }
 ?>
@@ -23,7 +24,7 @@ if (!empty($_SESSION['user_logged_in'])) {
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 
   <script src="https://unpkg.com/lucide@latest"></script>
-  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css?v=<?= time() ?>">
   <style>
     .auth-page-wrapper {
       min-height: 100vh;
@@ -342,10 +343,19 @@ if (!empty($_SESSION['user_logged_in'])) {
         setAuthTab('register');
       }
 
-      const pendingDish = sessionStorage.getItem('fms_pending_dish');
+      const pendingDish = urlParams.get('add_dish') || sessionStorage.getItem('fms_pending_dish') || localStorage.getItem('fms_pending_dish');
       if (pendingDish) {
+        sessionStorage.setItem('fms_pending_dish', pendingDish);
+        localStorage.setItem('fms_pending_dish', pendingDish);
         const notice = document.getElementById('auth-banner-notice');
-        if (notice) notice.style.display = 'flex';
+        if (notice) {
+          notice.innerHTML = `
+            <i data-lucide="sparkles" style="width: 18px; height: 18px; flex-shrink: 0; color: var(--primary);"></i>
+            <span><strong>Almost there!</strong> Sign in or create an account — your selected dish will be added directly to your cart automatically!</span>
+          `;
+          notice.style.display = 'flex';
+          if (window.lucide) lucide.createIcons();
+        }
       }
     });
 
@@ -462,12 +472,16 @@ if (!empty($_SESSION['user_logged_in'])) {
     }
 
     function handleAuthSuccessRedirect() {
-      const pendingDish = sessionStorage.getItem('fms_pending_dish');
-      const redirectUrl = sessionStorage.getItem('fms_redirect_url');
+      const urlParams = new URLSearchParams(window.location.search);
+      const pendingDish = urlParams.get('add_dish') || sessionStorage.getItem('fms_pending_dish') || localStorage.getItem('fms_pending_dish');
+      const redirectUrl = urlParams.get('redirect') || sessionStorage.getItem('fms_redirect_url');
 
       if (pendingDish) {
+        // Clear pending items from storage
+        sessionStorage.removeItem('fms_pending_dish');
+        localStorage.removeItem('fms_pending_dish');
         // Redirect back to storefront with auto_add parameter
-        window.location.href = `index.php?auto_add=${pendingDish}`;
+        window.location.href = `index.php?auto_add=${encodeURIComponent(pendingDish)}`;
       } else if (redirectUrl && !redirectUrl.includes('login.php')) {
         window.location.href = redirectUrl;
       } else {
@@ -478,7 +492,10 @@ if (!empty($_SESSION['user_logged_in'])) {
     function quickFillDemoCustomer() {
       document.getElementById('cust-login-email').value = 'customer@bitebuddy.com';
       document.getElementById('cust-login-password').value = '12345678';
-      document.getElementById('cust-login-form').dispatchEvent(new Event('submit'));
+      const form = document.getElementById('customer-login-form');
+      if (form) {
+        form.dispatchEvent(new Event('submit'));
+      }
     }
 
     function initTheme() {
@@ -505,3 +522,4 @@ if (!empty($_SESSION['user_logged_in'])) {
   </script>
 </body>
 </html>
+

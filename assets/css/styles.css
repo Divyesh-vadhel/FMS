@@ -1018,30 +1018,36 @@ body {
   pointer-events: auto;
 }
 
+/* =====================================================================
+   PREMIER RESTAURANT MENU MODAL (Swiggy / Zomato Format)
+   ===================================================================== */
 .menu-modal-dialog {
   background: var(--bg-card);
-  border-radius: var(--radius-lg);
+  border-radius: 22px;
   border: 1px solid var(--border);
   width: 100%;
-  max-width: 900px;
+  max-width: 880px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: var(--shadow-lg);
-  transform: translateY(20px);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+  transform: translateY(24px) scale(0.98);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
 }
 
 .modal-overlay.active .menu-modal-dialog {
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
-.modal-header-hero {
+/* Modal Hero Header */
+.menu-modal-hero {
   position: relative;
   padding: 1.75rem 2rem 1.25rem;
   border-bottom: 1px solid var(--border);
-  background: linear-gradient(135deg, rgba(226, 55, 68, 0.05) 0%, transparent 100%);
+  background: linear-gradient(135deg, rgba(226, 55, 68, 0.05) 0%, var(--bg-card) 100%);
+  flex-shrink: 0;
 }
 
 .close-modal-btn {
@@ -1059,20 +1065,188 @@ body {
   justify-content: center;
   cursor: pointer;
   transition: var(--transition);
+  z-index: 5;
 }
 
 .close-modal-btn:hover {
   background: var(--primary);
   color: #fff;
   border-color: var(--primary);
+  transform: rotate(90deg);
 }
 
+.menu-modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.menu-modal-title-row h2 {
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin: 0;
+}
+
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(2, 132, 199, 0.12);
+  color: #0284c7;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  border: 1px solid rgba(2, 132, 199, 0.25);
+}
+
+.menu-modal-cuisine {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 500;
+  margin: 4px 0 10px;
+}
+
+.menu-modal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.meta-pill.rating-pill {
+  background: #16a34a;
+  color: #ffffff;
+  border-color: #15803d;
+}
+
+.meta-pill.rating-pill .reviews-count {
+  opacity: 0.88;
+  font-weight: 500;
+}
+
+.meta-pill.offer-pill {
+  background: rgba(235, 43, 86, 0.08);
+  color: var(--primary);
+  border: 1px dashed rgba(235, 43, 86, 0.35);
+  font-weight: 700;
+}
+
+/* Modal Search & Filter Toolbar */
+.menu-modal-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.modal-search-box {
+  flex: 1;
+  min-width: 220px;
+  max-width: 380px;
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 7px 12px;
+  gap: 8px;
+  transition: var(--transition);
+}
+
+.modal-search-box:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(226, 55, 68, 0.12);
+}
+
+.modal-search-box input {
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--text);
+  font-size: 0.85rem;
+  width: 100%;
+}
+
+.modal-search-clear {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.modal-filter-toggles {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-filter-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.modal-filter-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.modal-filter-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(226, 55, 68, 0.3);
+}
+
+.veg-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  display: inline-block;
+}
+
+/* Modal Body List */
 .menu-list-body {
   padding: 1.5rem 2rem;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  flex: 1;
 }
 
 .dish-item-card {
@@ -1082,10 +1256,28 @@ body {
   gap: 1.5rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border);
+  transition: all 0.25s ease;
+  border-radius: 12px;
+  padding: 12px 10px;
+}
+
+.dish-item-card:hover {
+  background: rgba(0, 0, 0, 0.015);
+}
+
+[data-theme="dark"] .dish-item-card:hover {
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .dish-info {
   flex: 1;
+}
+
+.dish-meta-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
 }
 
 .dish-type-badge {
@@ -1094,42 +1286,67 @@ body {
   justify-content: center;
   width: 16px;
   height: 16px;
-  border: 2px solid;
-  border-radius: 3px;
-  margin-bottom: 6px;
+  border: 1.8px solid;
+  border-radius: 4px;
 }
 
 .dish-type-badge.veg {
-  border-color: var(--veg-green);
+  border-color: #22c55e;
 }
+
+.dish-type-badge.veg .badge-dot,
 .dish-type-badge.veg::after {
   content: "";
   width: 8px;
   height: 8px;
-  background: var(--veg-green);
+  background: #22c55e;
   border-radius: 50%;
 }
 
 .dish-type-badge.nonveg {
-  border-color: var(--nonveg-red);
+  border-color: #ef4444;
 }
+
+.dish-type-badge.nonveg .badge-dot,
 .dish-type-badge.nonveg::after {
   content: "";
   width: 8px;
   height: 8px;
-  background: var(--nonveg-red);
+  background: #ef4444;
   border-radius: 50%;
 }
 
+.dish-bestseller-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #b45309;
+  background: #fef3c7;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+  border: 1px solid #fde68a;
+}
+
+[data-theme="dark"] .dish-bestseller-tag {
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
 .dish-name {
-  font-size: 1.05rem;
+  font-size: 1.08rem;
   font-weight: 700;
+  color: var(--text);
   margin-bottom: 4px;
+  line-height: 1.35;
 }
 
 .dish-price {
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: 0.98rem;
+  font-weight: 800;
   color: var(--text);
   margin-bottom: 8px;
 }
@@ -1137,13 +1354,13 @@ body {
 .dish-desc {
   font-size: 0.82rem;
   color: var(--text-muted);
-  line-height: 1.4;
+  line-height: 1.45;
   max-width: 520px;
 }
 
 .dish-action-col {
   position: relative;
-  width: 120px;
+  width: 135px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1151,67 +1368,229 @@ body {
 }
 
 .dish-thumb {
-  width: 120px;
-  height: 96px;
-  border-radius: var(--radius-md);
+  width: 135px;
+  height: 105px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  background: #f1f5f9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: var(--bg);
 }
 
 .dish-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.35s ease;
 }
 
-/* Add / Counter Button */
+.dish-item-card:hover .dish-thumb img {
+  transform: scale(1.04);
+}
+
+/* Premier Swiggy / Zomato ADD Button */
 .add-btn {
-  margin-top: -16px;
-  background: var(--bg-card);
-  color: var(--primary);
-  border: 1px solid var(--primary);
-  font-weight: 700;
+  margin-top: -18px;
+  position: relative;
+  z-index: 2;
+  background: #ffffff;
+  color: #16a34a;
+  border: 1.5px solid #22c55e;
+  font-weight: 800;
   font-size: 0.88rem;
-  padding: 6px 20px;
-  border-radius: var(--radius-sm);
+  letter-spacing: 0.04em;
+  padding: 7px 24px;
+  border-radius: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  transition: var(--transition);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .add-btn:hover {
-  background: var(--primary);
-  color: #fff;
+  background: #16a34a;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.35);
+}
+
+[data-theme="dark"] .add-btn {
+  background: #1f2937;
+  color: #4ade80;
+  border-color: #22c55e;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .add-btn:hover {
+  background: #22c55e;
+  color: #0f172a;
 }
 
 .qty-counter {
-  margin-top: -16px;
-  background: var(--primary);
-  color: #fff;
-  border-radius: var(--radius-sm);
+  margin-top: -18px;
+  position: relative;
+  z-index: 2;
+  background: #16a34a;
+  color: #ffffff;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 4px 12px;
-  font-weight: 700;
-  font-size: 0.88rem;
-  box-shadow: 0 4px 10px rgba(226, 55, 68, 0.4);
+  padding: 5px 12px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.4);
 }
 
 .qty-btn {
   background: transparent;
   border: none;
-  color: #fff;
-  font-size: 1.1rem;
+  color: #ffffff;
+  font-size: 1.15rem;
+  font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0 4px;
+}
+
+.qty-btn:hover {
+  opacity: 0.85;
+}
+
+/* Floating Bottom Cart Bar inside Modal */
+.menu-modal-cart-bar {
+  margin: 0.75rem 1.5rem 1rem;
+  padding: 12px 20px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+  z-index: 10;
+  flex-shrink: 0;
+  animation: slideUpCartBar 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpCartBar {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-cart-count-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-cart-count {
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.modal-cart-divider {
+  opacity: 0.6;
+}
+
+.modal-cart-total {
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.modal-cart-sub {
+  display: block;
+  font-size: 0.74rem;
+  opacity: 0.88;
+  margin-top: 2px;
+}
+
+.modal-cart-checkout-btn {
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.modal-cart-checkout-btn:hover {
+  background: rgba(0, 0, 0, 0.35);
+  transform: translateX(2px);
+}
+
+/* Flash Highlight when auto-added */
+.dish-highlight-pulse {
+  animation: dishPulseGlow 2.5s ease-out forwards;
+}
+
+@keyframes dishPulseGlow {
+  0% { background: rgba(34, 197, 94, 0.35); box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.6); }
+  60% { background: rgba(34, 197, 94, 0.15); box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3); }
+  100% { background: transparent; box-shadow: none; }
+}
+
+/* Empty State */
+.menu-empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Global Toast Notifications */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.toast-message {
+  pointer-events: auto;
+  background: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: translateY(20px) scale(0.95);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-left: 4px solid #16a34a;
+}
+
+.toast-message.show {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 /* =====================================================================
